@@ -80,12 +80,12 @@ const PostSurveyFile = async (req, res) => {
     return res.status(400).json("Missing Information");
   }
   CaseFile.findOne({ _id: req.body.file_id }).then((casefile) => {
-    const newComment = {
+    const newSurvey = {
       user_id: req.user._id,
       date: Date.now(),
       comment: req.body.survey_content,
     };
-    casefile.comments.push(newComment);
+    casefile.survey.push(newSurvey);
     casefile
       .save()
       .then((newcasefile) => {
