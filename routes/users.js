@@ -10,6 +10,7 @@ const {
   UpdateName,
   UpdateCountry,
   UpdateBio,
+  GetUserFiles,
 } = require("../controllers/userCtrl");
 
 router.post("/register", Register);
@@ -38,6 +39,12 @@ router.put(
   "/updatebio",
   passport.authenticate("jwt", { session: false }),
   UpdateBio
+);
+
+router.get(
+  "/myfiles",
+  passport.authenticate("jwt", { session: false }),
+  GetUserFiles
 );
 
 module.exports = router;

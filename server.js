@@ -8,12 +8,13 @@ const passport = require("passport");
 const app = express();
 const port = 5000;
 const userRouter = require("./routes/users");
+const fileRouter = require("./routes/files");
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
-    extended: true
+    extended: true,
   })
 );
 const db = process.env.MONGO_URI;
@@ -34,6 +35,7 @@ app.use(passport.initialize());
 require("./config/passport")(passport);
 
 app.use("/api/users", userRouter);
+app.use("/api/files", fileRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);

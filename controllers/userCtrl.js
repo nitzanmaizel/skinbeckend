@@ -31,51 +31,41 @@ const Register = (req, res) => {
         isAdmin: false,
       });
 
-      bcrypt
-        .genSalt(10, (err, salt) => {
-          bcrypt.hash(newUser.password, salt, (err, hash) => {
-            if (err) throw err;
-            newUser.password = hash;
-            newUser
-              .save()
-              .then((user) => {
-                const payload = {
-                  id: user.id,
-                  firstName: user.firstName,
-                  lastName: user.lastName,
-                  bio: user.bio,
-                  country: user.country,
-                  email: user.email,
-                  isAdmin: user.isAdmin,
-                };
+      bcrypt.genSalt(10, (err, salt) => {
+        bcrypt.hash(newUser.password, salt, (err, hash) => {
+          if (err) throw err;
+          newUser.password = hash;
+          newUser.save().then((user) => {
+            const payload = {
+              id: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              bio: user.bio,
+              country: user.country,
+              email: user.email,
+              isAdmin: user.isAdmin,
+            };
 
-                jwt.sign(
-                  payload,
-                  process.env.ACCESS_TOKEN_SECRET,
-                  {
-                    expiresIn: 31556926,
-                  },
-                  (err, token) => {
-                    res
-                      .json({
-                        success: true,
-                        token: "Bearer " + token,
-                      })
-                      .catch((err) => {
-                        return res.status(500).json("Server Error");
-                      });
-                  }
-                );
-              })
-              .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ other: "Server Error" });
-              });
+            jwt.sign(
+              payload,
+              process.env.ACCESS_TOKEN_SECRET,
+              {
+                expiresIn: 31556926,
+              },
+              (err, token) => {
+                res
+                  .json({
+                    success: true,
+                    token: "Bearer " + token,
+                  })
+                  .catch((err) => {
+                    return res.status(500).json("Server Error");
+                  });
+              }
+            );
           });
-        })
-        .catch((err) => {
-          return res.status(500).json("Server Error");
         });
+      });
     }
   });
 };
@@ -90,50 +80,45 @@ const Login = (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  User.findOne({ email })
-    .then((user) => {
-      if (!user) {
-        return res.status(404).json({ email: "Email not registered!" });
+  User.findOne({ email }).then((user) => {
+    if (!user) {
+      return res.status(404).json({ email: "Email not registered!" });
+    }
+
+    bcrypt.compare(password, user.password).then((isMatch) => {
+      if (isMatch) {
+        const payload = {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          bio: user.bio,
+          country: user.country,
+          email: user.email,
+          isAdmin: user.isAdmin,
+        };
+
+        jwt.sign(
+          payload,
+          process.env.ACCESS_TOKEN_SECRET,
+          {
+            expiresIn: 31556926,
+          },
+          (err, token) => {
+            res
+              .json({
+                success: true,
+                token: "Bearer " + token,
+              })
+              .catch((err) => {
+                return res.status(500).json("Server Error");
+              });
+          }
+        );
+      } else {
+        return res.status(400).json({ password: "Incorrect Password" });
       }
-
-      bcrypt.compare(password, user.password).then((isMatch) => {
-        if (isMatch) {
-          const payload = {
-            id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            bio: user.bio,
-            country: user.country,
-            email: user.email,
-            isAdmin: user.isAdmin,
-          };
-
-          jwt.sign(
-            payload,
-            process.env.ACCESS_TOKEN_SECRET,
-            {
-              expiresIn: 31556926,
-            },
-            (err, token) => {
-              res
-                .json({
-                  success: true,
-                  token: "Bearer " + token,
-                })
-                .catch((err) => {
-                  return res.status(500).json("Server Error");
-                });
-            }
-          );
-        } else {
-          return res.status(400).json({ password: "Incorrect Password" });
-        }
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      return res.status(500).json({ other: "Server Error" });
     });
+  });
 };
 
 const UpdateEmail = (req, res) => {
@@ -146,59 +131,54 @@ const UpdateEmail = (req, res) => {
   const id = req.user.id;
   const email = req.body.email;
 
-  User.findOne({ email })
-    .then((user) => {
-      if (user !== null) {
-        if (user.id === id) {
-          return res.status(400).json("This is already your email!");
-        } else return res.status(400).json("Email is already beeing used!");
-      } else {
-        User.findOneAndUpdate(
-          { _id: id },
-          { $set: { email: email } },
-          { new: true },
-          function (err, user) {
-            if (err) {
-              console.log(err);
-              return res.status(500).json("Server Error");
-            }
-            if (user) {
-              const payload = {
-                id: user.id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                bio: user.bio,
-                country: user.country,
-                email: user.email,
-                isAdmin: user.isAdmin,
-              };
-
-              jwt.sign(
-                payload,
-                process.env.ACCESS_TOKEN_SECRET,
-                {
-                  expiresIn: 31556926,
-                },
-                (err, token) => {
-                  res
-                    .json({
-                      success: true,
-                      token: "Bearer " + token,
-                    })
-                    .catch((err) => {
-                      return res.status(500).json("Server Error");
-                    });
-                }
-              );
-            }
+  User.findOne({ email }).then((user) => {
+    if (user !== null) {
+      if (user.id === id) {
+        return res.status(400).json("This is already your email!");
+      } else return res.status(400).json("Email is already beeing used!");
+    } else {
+      User.findOneAndUpdate(
+        { _id: id },
+        { $set: { email: email } },
+        { new: true },
+        function (err, user) {
+          if (err) {
+            console.log(err);
+            return res.status(500).json("Server Error");
           }
-        );
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      return res.status(500).json("Server Error");
-    });
+          if (user) {
+            const payload = {
+              id: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              bio: user.bio,
+              country: user.country,
+              email: user.email,
+              isAdmin: user.isAdmin,
+            };
+
+            jwt.sign(
+              payload,
+              process.env.ACCESS_TOKEN_SECRET,
+              {
+                expiresIn: 31556926,
+              },
+              (err, token) => {
+                res
+                  .json({
+                    success: true,
+                    token: "Bearer " + token,
+                  })
+                  .catch((err) => {
+                    return res.status(500).json("Server Error");
+                  });
+              }
+            );
+          }
+        }
+      );
+    }
+  });
 };
 
 const UpdatePassword = (req, res) => {
@@ -284,10 +264,7 @@ const UpdateName = (req, res) => {
         );
       }
     }
-  ).catch((err) => {
-    console.log(err);
-    return res.status(500).json({ other: "Server Error" });
-  });
+  );
 };
 
 const UpdateCountry = (req, res) => {
@@ -339,10 +316,7 @@ const UpdateCountry = (req, res) => {
         );
       }
     }
-  ).catch((err) => {
-    console.log(err);
-    return res.status(500).json("Server Error");
-  });
+  );
 };
 
 const UpdateBio = (req, res) => {
@@ -391,10 +365,18 @@ const UpdateBio = (req, res) => {
         );
       }
     }
-  ).catch((err) => {
-    console.log(err);
-    return res.status(500).json("Server Error");
-  });
+  );
+};
+
+const GetUserFiles = async (req, res) => {
+  User.findOne({ _id: req.user._id })
+    .populate("case_files")
+    .then((user) => {
+      return res.json(user.case_files);
+    })
+    .catch((err) => {
+      res.status(500).send("Server Error");
+    });
 };
 
 module.exports = {
@@ -405,4 +387,5 @@ module.exports = {
   UpdateName: UpdateName,
   UpdateCountry: UpdateCountry,
   UpdateBio: UpdateBio,
+  GetUserFiles: GetUserFiles,
 };

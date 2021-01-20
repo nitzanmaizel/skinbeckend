@@ -31,6 +31,7 @@ const UserSchema = new Schema(
       type: Boolean,
       required: true,
     },
+    case_files: [{ type: mongoose.Schema.Types.ObjectId, ref: "caseFile" }],
   },
   { versionKey: false }
 );
