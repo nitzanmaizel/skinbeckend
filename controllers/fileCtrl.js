@@ -41,15 +41,16 @@ const UploadFile = async (req, res) => {
       return res.status(500).json("Server Error!");
     }
     user.case_files.push(newFile._id);
-    user.save().then((user) => {
-      res
-        .json({
+    user
+      .save()
+      .then((user) => {
+        res.json({
           user,
-        })
-        .catch((err) => {
-          return res.status(500).json("Server Error");
         });
-    });
+      })
+      .catch((err) => {
+        return res.status(500).json("Server Error");
+      });
   });
 };
 
