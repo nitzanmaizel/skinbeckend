@@ -53,11 +53,11 @@ const UploadFile = async (req, res) => {
   });
 };
 
-const CommentFile = async (req, res) => {
-  if (!req.body.comment_id || !req.body.comment_content) {
+const PostCommentFile = async (req, res) => {
+  if (!req.body.file_id || !req.body.comment_content) {
     return res.status(400).json("Missing Information");
   }
-  CaseFile.findOne({ _id: req.body.comment_id }).then((casefile) => {
+  CaseFile.findOne({ _id: req.body.file_id }).then((casefile) => {
     const newComment = {
       user_id: req.user._id,
       date: Date.now(),
@@ -75,7 +75,30 @@ const CommentFile = async (req, res) => {
   });
 };
 
+const PostSurveyFile = async (req, res) => {
+  if (!req.body.file_id || !req.body.survey_content) {
+    return res.status(400).json("Missing Information");
+  }
+  CaseFile.findOne({ _id: req.body.file_id }).then((casefile) => {
+    const newComment = {
+      user_id: req.user._id,
+      date: Date.now(),
+      comment: req.body.survey_content,
+    };
+    casefile.comments.push(newComment);
+    casefile
+      .save()
+      .then((newcasefile) => {
+        return res.json(newcasefile);
+      })
+      .catch((err) => {
+        return res.status(500).json("Server Error");
+      });
+  });
+};
+
 module.exports = {
   UploadFile: UploadFile,
-  CommentFile: CommentFile,
+  PostCommentFile: PostCommentFile,
+  PostSurveyFile: PostSurveyFile,
 };

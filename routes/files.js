@@ -3,7 +3,11 @@ const express = require("express");
 const router = express.Router();
 const passport = require("passport");
 
-const { UploadFile, CommentFile } = require("../controllers/fileCtrl");
+const {
+  UploadFile,
+  PostCommentFile,
+  PostSurveyFile,
+} = require("../controllers/fileCtrl");
 
 router.post(
   "/upload",
@@ -15,7 +19,13 @@ router.post(
 router.put(
   "/comment",
   passport.authenticate("jwt", { session: false }),
-  CommentFile
+  PostCommentFile
+);
+
+router.put(
+  "/survey",
+  passport.authenticate("jwt", { session: false }),
+  PostSurveyFile
 );
 
 module.exports = router;
