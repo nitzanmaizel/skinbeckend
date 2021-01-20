@@ -55,6 +55,10 @@ const CaseFileSchema = new Schema(
       type: Array,
       required: false,
     },
+    survey: {
+      type: Array,
+      required: false,
+    },
     date_created: {
       type: Date,
       default: Date.now(),
